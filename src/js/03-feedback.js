@@ -4,6 +4,8 @@ const feedbackForm = document.querySelector('.feedback-form');
 const emailInput = document.querySelector('input[name="email"]');
 const messageInput = document.querySelector('textarea[name="message"]');
 
+const formData = {};
+
 const saveFormValues = throttle(() => {
   localStorage.setItem('email', emailInput.value);
   localStorage.setItem('message', messageInput.value);
@@ -23,7 +25,7 @@ function loadFormValues() {
 }
 
 emailInput.addEventListener('input', saveFormValues);
-messageInput.addEventListener('input', saveFormValues);
+messageInput.addEventListener('submit', saveFormValues);
 
 loadFormValues();
 
