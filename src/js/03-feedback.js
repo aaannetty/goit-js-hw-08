@@ -1,37 +1,60 @@
 import throttle from 'lodash.throttle';
+import simpleLightbox from 'simplelightbox';
+import localStorageApi from './localstorage';
 
-const feedbackForm = document.querySelector('.feedback-form');
-const emailInput = document.querySelector('input[name="email"]');
-const messageInput = document.querySelector('textarea[name="message"]');
+const formEl = document.querySelector('form');
 
-const formData = {};
+formEl.addEventListener('input', throttle(saveFormValues, 500));
+formEl.addEventListener('submit', onSubmit);
 
-const saveFormValues = throttle(() => {
-  localStorage.setItem('email', emailInput.value);
-  localStorage.setItem('message', messageInput.value);
-}, 500);
+let userData = {};
+const LOCAL_KEY = 'feedback-form-state';
 
-function loadFormValues() {
-  const savedEmail = localStorage.getItem('email');
-  const savedMessage = localStorage.getItem('message');
+function saveFormValues(evt) {
+  const target = evt.target;
 
-  if (savedEmail) {
-    emailInput.value = savedEmail;
+  const formElValue = target.value;
+  const formElName = target.name;
+  userData[formElName] = formElValue;
+  localStorageApi.save(LOCAL_KEY, userData);
+}
+
+function onSubmit(evt) {
+  evt.preventDefault();
+
+  const {
+    elements: { email, message },
+  } = evt.currentTarget;
+
+  if (email.value === '' || message.value === '') {
+    return alert('Fill all fields!');
   }
 
-  if (savedMessage) {
-    messageInput.value = savedMessage;
+  console.log(userData);
+
+  localStorageApi.remove(LOCAL_KEY);
+  formEl.reset();
+
+  userData = {};
+}
+
+function loadFormValues() {
+  const userDataFromLS = localStorageApi.load(LOCAL_KEY);
+
+  if (!userDataFromLS) {
+    return;
+  }
+  const formElements = formEl.elements;
+
+  for (const key in userDataFromLS) {
+    if (userDataFromLS.hasOwnProperty(key)) {
+      formElements[key].value = userDataFromLS[key];
+
+      if (userDataFromLS[key]) {
+        userData[key] = userDataFromLS[key];
+      }
+    }
   }
 }
 
-emailInput.addEventListener('input', saveFormValues);
-messageInput.addEventListener('submit', saveFormValues);
-
 loadFormValues();
-
-console.log({
-  email: emailInput.value,
-  message: messageInput.value,
-});
-
-feedbackForm.reset();
